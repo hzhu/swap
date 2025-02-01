@@ -3,18 +3,25 @@
 import Image from "next/image";
 import { useReducer } from "react";
 import { formatUnits } from "viem";
-import { base } from "viem/chains";
+import { arbitrum, base } from "viem/chains";
 import { swapReducer } from "@/reducers";
 import { Header } from "@/components/header";
 import { useDebounce, useSwapPrice } from "@/hooks";
-import { BASE_TOKENS, BASE_TOKENS_BY_ADDRESS, USDC, WETH } from "@/constants";
+import {
+  BASE_TOKENS_BY_ADDRESS,
+  TOKEN_MAPS_BY_CHAIN_ID,
+  TOKENS_BY_CHAIN_ID,
+} from "@/constants";
 
 export default function Home() {
   const [state, dispatch] = useReducer(swapReducer, {
-    sellToken: USDC,
-    buyToken: WETH,
+    sellToken:
+      BASE_TOKENS_BY_ADDRESS["0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"],
+    buyToken:
+      BASE_TOKENS_BY_ADDRESS["0x4200000000000000000000000000000000000006"],
     inputAmount: "",
     shouldDebounce: true,
+    chainId: base.id,
   });
 
   const { inputAmount, shouldDebounce } = state;
@@ -29,7 +36,7 @@ export default function Home() {
   const { data, error, isFetching } = useSwapPrice({
     sellAmount,
     slippageBps: 50,
-    chainId: base.id,
+    chainId: state.chainId,
     sellToken: state.sellToken,
     buyToken: state.buyToken,
   });
@@ -38,6 +45,8 @@ export default function Home() {
     ? formatUnits(BigInt(data.buyAmount), state.buyToken.decimals)
     : "";
 
+  const tokenMapsByChainId = TOKEN_MAPS_BY_CHAIN_ID[state.chainId];
+
   return (
     <>
       <Header />
@@ -45,6 +54,33 @@ export default function Home() {
         <div className="w-full max-w-md">
           <h1 className="sr-only">Swap Tokens</h1>
           <form>
+            <div className="flex mb-2 justify-end">
+              <div>
+                <label
+                  htmlFor="chain-selector"
+                  className="block mb-2 text-sm font-medium text-gray-900 sr-only"
+                >
+                  select a chain
+                </label>
+                <select
+                  id="chain-selector"
+                  value={state.chainId}
+                  className="py-1 px-2 rounded-md"
+                  onChange={(e) => {
+                    dispatch({
+                      type: "select chain",
+                      payload: Number(e.target.value),
+                    });
+                  }}
+                >
+                  {[base, arbitrum].map((chain) => (
+                    <option key={chain.id} value={chain.id}>
+                      {chain.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
             <div className="flex items-center mb-2">
               <label
                 htmlFor="input-amount"
@@ -56,7 +92,7 @@ export default function Home() {
                   width={25}
                   height={25}
                   src={state.sellToken.logo}
-                  className="inline-block mr-1"
+                  className="inline-block mr-2"
                   alt={`${state.sellToken.symbol} logo`}
                 />
               </label>
@@ -70,14 +106,15 @@ export default function Home() {
                 <select
                   id="sell-token"
                   value={state.sellToken.address}
+                  className="py-1 px-2 rounded-md"
                   onChange={(e) => {
                     dispatch({
                       type: "select sell token",
-                      payload: BASE_TOKENS_BY_ADDRESS[e.target.value],
+                      payload: tokenMapsByChainId[e.target.value],
                     });
                   }}
                 >
-                  {BASE_TOKENS.map((option) => (
+                  {TOKENS_BY_CHAIN_ID[state.chainId].map((option) => (
                     <option key={option.address} value={option.address}>
                       {option.symbol}
                     </option>
@@ -127,7 +164,7 @@ export default function Home() {
                   width={25}
                   height={25}
                   src={state.buyToken.logo}
-                  className="inline-block mr-1"
+                  className="inline-block mr-2"
                   alt={`${state.buyToken.symbol} logo`}
                 />
               </label>
@@ -141,15 +178,15 @@ export default function Home() {
                 <select
                   id="buy-token"
                   value={state.buyToken.address}
+                  className="py-1 px-2 rounded-md"
                   onChange={(e) => {
                     dispatch({
                       type: "select buy token",
-                      payload: BASE_TOKENS_BY_ADDRESS[e.target.value],
+                      payload: tokenMapsByChainId[e.target.value],
                     });
                   }}
-                  className=""
                 >
-                  {BASE_TOKENS.map((option) => (
+                  {TOKENS_BY_CHAIN_ID[state.chainId].map((option) => (
                     <option key={option.address} value={option.address}>
                       {option.symbol}
                     </option>
