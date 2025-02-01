@@ -5,12 +5,22 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --input-background: #f3f4f6;
+  --input-foreground: #171717;
+  --placeholder: #6b7280;
+  --select-background: #f3f4f6;
+  --select-foreground: #171717;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --input-background: #1f2937;
+    --input-foreground: #ededed;
+    --placeholder: #9ca3af;
+    --select-background: #1f2937;
+    --select-foreground: #ededed;
   }
 }
 
@@ -20,6 +30,36 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-input {
-  color: var(--background);
+input,
+select {
+  color: var(--input-foreground);
+  background-color: var(--input-background);
+}
+
+input::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
+}
+
+/* Style for select element */
+select {
+  color: var(--select-foreground);
+  background-color: var(--select-background);
+}
+
+/* Style for select options */
+select option {
+  color: var(--select-foreground);
+  background-color: var(--select-background);
+}
+
+/* For Webkit browsers like Chrome and Safari */
+select::-webkit-select-placeholder {
+  color: var(--placeholder);
+}
+
+/* For Firefox */
+select:-moz-placeholder {
+  color: var(--placeholder);
+  opacity: 1;
 }

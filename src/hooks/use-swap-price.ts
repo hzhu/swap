@@ -1,14 +1,8 @@
 import { parseUnits } from "viem";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPrice } from "@/utils/fetch-price";
-import { ZeroExPriceResponse } from "@/types/zero-ex-api";
-
-interface Token {
-  name: string;
-  symbol: string;
-  address: string;
-  decimals: number;
-}
+import { ZeroExPriceResponse } from "@/types/zeroex-api";
+import { Token } from "@/types/tokens";
 
 interface UseSwapPriceArgs {
   taker?: string;
