@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useReducer } from "react";
+import { useReducer, useState } from "react";
 import { formatUnits } from "viem";
 import { USDC, WETH } from "@/constants";
 import { swapReducer } from "@/reducers";
@@ -38,6 +38,13 @@ export default function Home() {
       )
     : "";
 
+  const [selectedValue, setSelectedValue] = useState("usdc");
+
+  const options = [
+    { label: "USDC", value: "usdc" },
+    { label: "WETH", value: "weth" },
+  ];
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <form className="w-full max-w-md">
@@ -47,20 +54,40 @@ export default function Home() {
             className="font-semibold flex items-center"
           >
             <span className="text-2xl mr-2">Sell</span>
-            <span className="flex items-center">
-              <Image
-                priority
-                width={25}
-                height={25}
-                alt={isDefaultDirection ? "usdc" : "weth"}
-                src={isDefaultDirection ? "/usdc.webp" : "/weth.webp"}
-                className="inline-block mr-1"
-              />
-              <span className="text-lg">
-                {isDefaultDirection ? USDC.symbol : WETH.symbol}
-              </span>
-            </span>
+            <Image
+              priority
+              width={25}
+              height={25}
+              alt={isDefaultDirection ? "usdc" : "weth"}
+              src={isDefaultDirection ? "/usdc.webp" : "/weth.webp"}
+              className="inline-block mr-1"
+            />
           </label>
+          <div>
+            <label
+              htmlFor="input-token"
+              className="block mb-2 text-sm font-medium text-gray-900 sr-only"
+            >
+              select a sell token
+            </label>
+            <select
+              id="input-token"
+              value={selectedValue}
+              onChange={(e) => {
+                console.log(e.target.value);
+              }}
+              className=""
+            >
+              <option value="" disabled>
+                Choose an option
+              </option>
+              {options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <button
             type="button"
             disabled={isFetching}
