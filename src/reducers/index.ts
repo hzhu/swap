@@ -50,7 +50,14 @@ export function swapReducer(state: State, action: Action): State {
       }
     case "select chain":
       const [sellToken, buyToken] = TOKENS_BY_CHAIN_ID[action.payload];
-      return { ...state, chainId: action.payload, sellToken, buyToken };
+      return {
+        ...state,
+        chainId: action.payload,
+        shouldDebounce: false,
+        inputAmount: "",
+        sellToken,
+        buyToken,
+      };
     default:
       return state;
   }
