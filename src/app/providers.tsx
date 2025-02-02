@@ -43,8 +43,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
             appearance: {
               theme: "dark",
               accentColor: "#676FFF",
-              logo: "https://your-logo-url",
               walletChainType: "ethereum-only",
+              logo: "https://cdn.prod.website-files.com/66967cfef0a246cbbb9aee94/66967cfef0a246cbbb9aeeee_logo.svg",
             },
             embeddedWallets: {
               createOnLogin: "users-without-wallets",

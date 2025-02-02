@@ -151,7 +151,7 @@ export function SwapForm({
         value={state.inputAmount}
         placeholder="Enter amount"
         pattern="^[0-9]*[.,]?[0-9]*$"
-        className="text-lg w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        className="text-lg w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
         onChange={(e) => {
           if (e.target.validity.valid) {
             dispatch({
@@ -222,7 +222,7 @@ export function SwapForm({
         disabled
         id="sell-amount"
         value={outputAmount}
-        className="mt-2 mb-6 text-lg w-full p-3 rounded-md cursor-not-allowed border-none disabled:bg-gray-500 disabled:cursor-not-allowed"
+        className="mt-2 mb-6 text-lg w-full p-3 rounded-xl cursor-not-allowed border-none disabled:bg-gray-700 disabled:cursor-not-allowed"
       />
       <button
         disabled
@@ -230,7 +230,7 @@ export function SwapForm({
         onClick={() => {
           dispatch({ type: "toggle direction", payload: outputAmount });
         }}
-        className="px-3 p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-300 w-full select-none"
+        className="px-3 p-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-300 w-full select-none"
       >
         Swap (Coming Soon)
       </button>
