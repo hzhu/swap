@@ -74,8 +74,8 @@ export function SwapForm({
           <Image
             width={28}
             height={28}
-            src={`${CHAIN_NAMES_BY_ID[state.chainId]}.svg`}
-            alt={`${CHAIN_NAMES_BY_ID[state.chainId]} logo`}
+            src={`${CHAIN_NAMES_BY_ID[state.chainId].toLowerCase()}.svg`}
+            alt={`${CHAIN_NAMES_BY_ID[state.chainId].toLowerCase()} logo`}
           />
           <label htmlFor="chain-selector" className="sr-only">
             select a chain
@@ -224,8 +224,8 @@ export function SwapForm({
         className="mt-2 mb-6 text-lg w-full p-3 rounded-md cursor-not-allowed border-none disabled:bg-gray-500 disabled:cursor-not-allowed"
       />
       <button
-        type="button"
         disabled
+        type="button"
         onClick={() => {
           dispatch({ type: "toggle direction", payload: outputAmount });
         }}

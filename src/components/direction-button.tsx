@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { useState, forwardRef } from "react";
-import type { FC, ReactNode, ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes } from "react";
 
 export const DirectionButton = forwardRef<
   HTMLButtonElement,
@@ -36,24 +36,3 @@ export const DirectionButton = forwardRef<
     </button>
   );
 });
-
-const Lines: FC<{ active: boolean; children: ReactNode }> = ({
-  active,
-  children,
-}) => (
-  <div className="relative h-10 right-16">
-    <div
-      role="presentation"
-      className={`h-4.5 w-9 rounded-tl-lg border-t-2 border-l-2 bottom-11 left-5 absolute ${
-        active ? "border-gray-200" : "border-gray-100"
-      }`}
-    />
-    {children}
-    <div
-      role="presentation"
-      className={`h-4.5 w-9 rounded-bl-lg border-b-2 border-l-2 top-11 left-5 absolute ${
-        active ? "border-gray-200" : "border-gray-100"
-      }`}
-    />
-  </div>
-);
