@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SwapForm } from "@/components/swap-form";
+import { ServerError } from "@/components/server-error";
 import { ConnectButton } from "@/components/connect-button";
 
 type PageProps = {
@@ -15,7 +16,7 @@ export default async function Home({ searchParams }: PageProps) {
     Array.isArray(sellAmount) ||
     Array.isArray(chainId)
   ) {
-    throw new Error("Invalid query parameters");
+    return <ServerError message="Invalid query parameters." />;
   }
 
   return (

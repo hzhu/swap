@@ -1,8 +1,20 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
+/**
+ * A React error boundary component that displays an error message and provides recovery options in client components.
+ * React server components will always return an obfuscated error message in production to prevent leaking sensitive
+ * information. For a more user-friendly server error message, you can use `server-error.tsx`.
+ *
+ * @param {Object} props - The component props.
+ * @param {Error & { digest?: string }} props.error - The error object, which may include an optional digest identifier.
+ * @param {() => void} props.reset - A function to reset the error state.
+ *
+ * @returns {JSX.Element} A UI component that displays the error message and provides buttons to go home or retry.
+ *
+ * See: https://nextjs.org/docs/pages/building-your-application/configuring/error-handling#handling-client-errors
+ */
 export default function Error({
   error,
   reset,
@@ -10,15 +22,12 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const router = useRouter();
-
   useEffect(() => {
     // Log the error to an error reporting service
     console.error(error);
   }, [error]);
 
   const handleGoHome = () => {
-    // Force a full page reload when navigating home
     window.location.href = "/";
   };
 
@@ -29,18 +38,24 @@ export default function Error({
           Something went wrong
         </h2>
         <div className="mb-4 p-3 border border-red-500 text-red-500 rounded">
-          <span className="font-semibold">Error</span>: {error.message}
+          <span className="font-semibold">Error: </span>
+          {process.env.NODE_ENV === "production"
+            ? "An unexpected error occurred"
+            : error.message}
+          {error.digest && (
+            <p className="mt-2 text-sm">Error ID: {error.digest}</p>
+          )}
         </div>
         <div className="flex flex-col space-y-2">
           <button
-            className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             onClick={handleGoHome}
+            className="w-full py-2 bg-slate-200 text-black rounded hover:bg-slate-300 transition-all"
           >
             🏠 Go Home
           </button>
           <button
-            className="w-full py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-            onClick={() => reset()}
+            onClick={reset}
+            className="w-full py-2 bg-slate-700 rounded hover:bg-slate-800 transition-all"
           >
             Try again
           </button>
