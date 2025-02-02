@@ -41,7 +41,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           appId="cm1k78nl101dtqj2bcs76kzab"
           config={{
             appearance: {
-              theme: "light",
+              theme: "dark",
               accentColor: "#676FFF",
               logo: "https://your-logo-url",
               walletChainType: "ethereum-only",

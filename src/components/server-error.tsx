@@ -13,7 +13,7 @@ export function ServerError({ message }: { message: string }) {
         </div>
         <div className="flex flex-col space-y-2">
           <Link href="/">
-            <button className="w-full py-2 bg-slate-200 text-black rounded hover:bg-slate-300 transition-all">
+            <button className="w-full py-2 bg-slate-800 rounded hover:bg-slate-700 transition-all">
               🏠 Go Home
             </button>
           </Link>

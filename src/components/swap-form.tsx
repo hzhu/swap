@@ -3,13 +3,14 @@
 import Image from "next/image";
 import { useReducer } from "react";
 import { formatUnits } from "viem";
+import { base } from "viem/chains";
 import { swapReducer } from "@/reducers";
-import { arbitrum, base } from "viem/chains";
 import { useSearchParams } from "next/navigation";
 import { DirectionButton } from "./direction-button";
 import { isChainIdSupported } from "@/utils/validation";
 import { useDebounce, useSwapPrice, useSyncSwapParams } from "@/hooks";
 import {
+  SUPPORTED_CHAINS,
   CHAIN_NAMES_BY_ID,
   INITIAL_BUY_TOKEN,
   INITIAL_SELL_TOKEN,
@@ -19,10 +20,10 @@ import {
 import type { SwapFormProps } from "@/types";
 
 export function SwapForm({
-  sellToken,
-  buyToken,
-  sellAmount,
   chainId,
+  buyToken,
+  sellToken,
+  sellAmount,
 }: SwapFormProps) {
   if (chainId && !isChainIdSupported(Number(chainId))) {
     throw new Error(`Unsupported chain ID: ${chainId}`);
@@ -91,7 +92,7 @@ export function SwapForm({
               });
             }}
           >
-            {[base, arbitrum].map((chain) => (
+            {SUPPORTED_CHAINS.map((chain) => (
               <option key={chain.id} value={chain.id}>
                 {chain.name}
               </option>

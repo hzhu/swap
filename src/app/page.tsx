@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { SwapForm } from "@/components/swap-form";
-import { ServerError } from "@/components/server-error";
-import { ConnectButton } from "@/components/connect-button";
+import { SwapForm, ServerError, ConnectButton } from "@/components";
 
 type PageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

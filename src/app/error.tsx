@@ -34,7 +34,7 @@ export default function Error({
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <div className="w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-4 text-center">
+        <h2 className="text-4xl font-bold mb-4 text-center">
           Something went wrong
         </h2>
         <div className="mb-4 p-3 border border-red-500 text-red-500 rounded">
@@ -46,16 +46,16 @@ export default function Error({
             <p className="mt-2 text-sm">Error ID: {error.digest}</p>
           )}
         </div>
-        <div className="flex flex-col space-y-2">
+        <div className="flex">
           <button
             onClick={handleGoHome}
-            className="w-full py-2 bg-slate-200 text-black rounded hover:bg-slate-300 transition-all"
+            className="w-full py-2 bg-slate-800 rounded hover:bg-slate-700 transition-all mr-4"
           >
             🏠 Go Home
           </button>
           <button
             onClick={reset}
-            className="w-full py-2 bg-slate-700 rounded hover:bg-slate-800 transition-all"
+            className="w-full py-2 bg-slate-900 rounded hover:bg-slate-800 transition-all"
           >
             Try again
           </button>

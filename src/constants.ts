@@ -86,3 +86,5 @@ export const CHAIN_NAMES_BY_ID: Record<number, string> = {
   [base.id]: "Base",
   [arbitrum.id]: "Arbitrum",
 };
+
+export const SUPPORTED_CHAINS = [base, arbitrum];
