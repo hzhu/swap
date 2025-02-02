@@ -5,39 +5,58 @@ import { useReducer } from "react";
 import { formatUnits } from "viem";
 import { swapReducer } from "@/reducers";
 import { arbitrum, base } from "viem/chains";
-import { useDebounce, useSwapPrice } from "@/hooks";
+import { useSearchParams } from "next/navigation";
+import { isChainIdSupported } from "@/utils/validation";
+import { useDebounce, useSwapPrice, useSyncSwapParams } from "@/hooks";
 import {
-  BASE_TOKENS_BY_ADDRESS,
-  TOKEN_MAPS_BY_CHAIN_ID,
+  INITIAL_BUY_TOKEN,
+  INITIAL_SELL_TOKEN,
   TOKENS_BY_CHAIN_ID,
+  TOKEN_MAPS_BY_CHAIN_ID,
 } from "@/constants";
+import type { SwapFormProps } from "@/types";
 
-export function SwapForm() {
-  const [state, dispatch] = useReducer(swapReducer, {
+export function SwapForm({
+  sellToken,
+  buyToken,
+  sellAmount,
+  chainId,
+}: SwapFormProps) {
+  if (chainId && !isChainIdSupported(Number(chainId))) {
+    throw new Error(`Unsupported chain ID: ${chainId}`);
+  }
+
+  const initialState = {
     sellToken:
-      BASE_TOKENS_BY_ADDRESS["0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"],
+      chainId && sellToken
+        ? TOKEN_MAPS_BY_CHAIN_ID[chainId][sellToken]
+        : INITIAL_SELL_TOKEN,
     buyToken:
-      BASE_TOKENS_BY_ADDRESS["0x4200000000000000000000000000000000000006"],
-    inputAmount: "",
+      chainId && buyToken
+        ? TOKEN_MAPS_BY_CHAIN_ID[chainId][buyToken]
+        : INITIAL_BUY_TOKEN,
+    inputAmount: sellAmount ? sellAmount : "",
+    chainId: chainId ? Number(chainId) : base.id,
     shouldDebounce: true,
-    chainId: base.id,
-  });
+  };
 
-  const { inputAmount, shouldDebounce } = state;
+  const [state, dispatch] = useReducer(swapReducer, initialState);
+
+  const searchParams = useSearchParams();
+
+  useSyncSwapParams({ state, searchParams });
 
   const debouncedInputAmount = useDebounce({
-    value: inputAmount,
-    enabled: shouldDebounce,
+    value: state.inputAmount,
+    enabled: state.shouldDebounce,
   });
 
-  const sellAmount = shouldDebounce ? debouncedInputAmount : inputAmount;
-
   const { data, error, isFetching } = useSwapPrice({
-    sellAmount,
-    slippageBps: 50,
-    chainId: state.chainId,
+    sellAmount: state.shouldDebounce ? debouncedInputAmount : state.inputAmount,
     sellToken: state.sellToken,
     buyToken: state.buyToken,
+    chainId: state.chainId,
+    slippageBps: 50,
   });
 
   const outputAmount = data?.buyAmount
@@ -123,7 +142,7 @@ export function SwapForm() {
         autoComplete="off"
         spellCheck="false"
         inputMode="decimal"
-        value={inputAmount}
+        value={state.inputAmount}
         placeholder="Enter amount"
         pattern="^[0-9]*[.,]?[0-9]*$"
         className="text-lg w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300"

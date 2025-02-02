@@ -1,7 +1,7 @@
 import { TOKENS_BY_CHAIN_ID } from "@/constants";
 import type { Token } from "@/types/tokens";
 
-type State = {
+export type State = {
   inputAmount: string;
   shouldDebounce: boolean;
   sellToken: Token;

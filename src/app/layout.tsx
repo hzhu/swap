@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Debounce Sell Input",
-  description: "Debounce Sell Input for 0x Swap user interface",
+  title: "DEX Aggregator",
+  description: "Swap on the best DEX with the best price",
 };
 
 export default function RootLayout({
