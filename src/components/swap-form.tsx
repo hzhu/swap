@@ -15,6 +15,7 @@ import {
   TOKEN_MAPS_BY_CHAIN_ID,
 } from "@/constants";
 import type { SwapFormProps } from "@/types";
+import { DirectionButton } from "./direction-button";
 
 export function SwapForm({
   sellToken,
@@ -155,13 +156,24 @@ export function SwapForm({
           }
         }}
       />
-      <div aria-live="polite" className="h-6 mt-2 mb-6 text-sm text-gray-300">
+      <div aria-live="polite" className="h-6 mt-2 text-sm text-gray-300">
         {error ? (
           <p className="text-red-500">{error.message}</p>
         ) : isFetching ? (
           "Finding best price…"
         ) : null}
       </div>
+
+      <div className="flex justify-center">
+        <DirectionButton
+          type="button"
+          className="mb-8"
+          onClick={() => {
+            dispatch({ type: "toggle direction", payload: outputAmount });
+          }}
+        />
+      </div>
+
       <div className="flex items-center">
         <label
           htmlFor="sell-amount"
@@ -208,17 +220,17 @@ export function SwapForm({
         disabled
         id="sell-amount"
         value={outputAmount}
-        className="mt-2 text-lg w-full p-3 rounded-md cursor-not-allowed border-none mb-4 disabled:bg-gray-500 disabled:cursor-not-allowed"
+        className="mt-2 mb-6 text-lg w-full p-3 rounded-md cursor-not-allowed border-none disabled:bg-gray-500 disabled:cursor-not-allowed"
       />
       <button
         type="button"
-        disabled={isFetching}
+        disabled
         onClick={() => {
           dispatch({ type: "toggle direction", payload: outputAmount });
         }}
-        className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-300"
+        className="px-3 p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-300 w-full select-none"
       >
-        Switch Trade Directions
+        Swap
       </button>
     </form>
   );
