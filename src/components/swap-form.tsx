@@ -6,16 +6,17 @@ import { formatUnits } from "viem";
 import { swapReducer } from "@/reducers";
 import { arbitrum, base } from "viem/chains";
 import { useSearchParams } from "next/navigation";
+import { DirectionButton } from "./direction-button";
 import { isChainIdSupported } from "@/utils/validation";
 import { useDebounce, useSwapPrice, useSyncSwapParams } from "@/hooks";
 import {
+  CHAIN_NAMES_BY_ID,
   INITIAL_BUY_TOKEN,
   INITIAL_SELL_TOKEN,
   TOKENS_BY_CHAIN_ID,
   TOKEN_MAPS_BY_CHAIN_ID,
 } from "@/constants";
 import type { SwapFormProps } from "@/types";
-import { DirectionButton } from "./direction-button";
 
 export function SwapForm({
   sellToken,
@@ -69,17 +70,20 @@ export function SwapForm({
   return (
     <form>
       <div className="flex mb-2 justify-end">
-        <div>
-          <label
-            htmlFor="chain-selector"
-            className="block mb-2 text-sm font-medium text-gray-900 sr-only"
-          >
+        <div className="flex">
+          <Image
+            width={28}
+            height={28}
+            src={`${CHAIN_NAMES_BY_ID[state.chainId]}.svg`}
+            alt={`${CHAIN_NAMES_BY_ID[state.chainId]} logo`}
+          />
+          <label htmlFor="chain-selector" className="sr-only">
             select a chain
           </label>
           <select
             id="chain-selector"
             value={state.chainId}
-            className="py-1 px-2 rounded-md"
+            className="py-1 px-2 ml-2 rounded-md"
             onChange={(e) => {
               dispatch({
                 type: "select chain",
@@ -163,7 +167,6 @@ export function SwapForm({
           "Finding best price…"
         ) : null}
       </div>
-
       <div className="flex justify-center">
         <DirectionButton
           type="button"
@@ -173,14 +176,12 @@ export function SwapForm({
           }}
         />
       </div>
-
       <div className="flex items-center">
         <label
           htmlFor="sell-amount"
           className="font-semibold flex items-center"
         >
           <span className="text-2xl mr-2">Buy</span>
-
           <Image
             priority
             width={25}
@@ -230,7 +231,7 @@ export function SwapForm({
         }}
         className="px-3 p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-300 w-full select-none"
       >
-        Swap
+        Swap (Coming Soon)
       </button>
     </form>
   );

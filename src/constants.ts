@@ -81,3 +81,8 @@ export const INITIAL_SELL_TOKEN =
 
 export const INITIAL_BUY_TOKEN =
   BASE_TOKENS_BY_ADDRESS["0x4200000000000000000000000000000000000006"];
+
+export const CHAIN_NAMES_BY_ID: Record<number, string> = {
+  [base.id]: "Base",
+  [arbitrum.id]: "Arbitrum",
+};
