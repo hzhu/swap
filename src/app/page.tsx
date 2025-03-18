@@ -18,8 +18,8 @@ export default async function Home({ searchParams }: PageProps) {
   }
 
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 p-6">
+    <main className="flex flex-col min-h-screen">
+      <header className="p-4">
         <div className="container mx-auto flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold flex items-center">
             🪙
@@ -27,7 +27,7 @@ export default async function Home({ searchParams }: PageProps) {
           <ConnectButton />
         </div>
       </header>
-      <section className="min-h-screen flex items-center justify-center p-4">
+      <section className="px-4 mt-8 md:mt-0 md:flex-grow md:flex md:items-center md:justify-center">
         <div className="w-full max-w-md">
           <h1 className="sr-only">Swap Tokens</h1>
           <SwapForm
@@ -38,6 +38,6 @@ export default async function Home({ searchParams }: PageProps) {
           />
         </div>
       </section>
-    </>
+    </main>
   );
 }
