@@ -37,7 +37,7 @@ export default function Error({
         <h2 className="text-4xl font-bold mb-4 text-center">
           Something went wrong
         </h2>
-        <div className="mb-4 p-3 border border-red-500 text-red-500 rounded">
+        <div className="mb-4 p-3 border border-red-500 text-red-500 rounded-sm">
           <span className="font-semibold">Error: </span>
           {process.env.NODE_ENV === "production"
             ? "An unexpected error occurred"
@@ -49,13 +49,13 @@ export default function Error({
         <div className="flex">
           <button
             onClick={handleGoHome}
-            className="w-full py-2 bg-slate-800 rounded hover:bg-slate-700 transition-all mr-4"
+            className="w-full py-2 bg-slate-800 rounded-sm hover:bg-slate-700 transition-all mr-4"
           >
             🏠 Go Home
           </button>
           <button
             onClick={reset}
-            className="w-full py-2 bg-slate-900 rounded hover:bg-slate-800 transition-all"
+            className="w-full py-2 bg-slate-900 rounded-sm hover:bg-slate-800 transition-all"
           >
             Try again
           </button>

@@ -28,7 +28,7 @@ export function ConnectButton() {
         onClick={() => {
           alert("Disconnect from Phantom wallet in Phantom extension");
         }}
-        className="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all flex items-center"
+        className="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-300 transition-all flex items-center"
       >
         <Image
           width={20}
@@ -46,7 +46,7 @@ export function ConnectButton() {
   return ready ? (
     <button
       onClick={handleConnect}
-      className="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all flex items-center"
+      className="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-300 transition-all flex items-center"
     >
       {isConnected && wallet && wallet.meta?.icon ? (
         <>

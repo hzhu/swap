@@ -22,7 +22,7 @@ export const DirectionButton = forwardRef<
         props.disabled
           ? ""
           : "dark:hover:bg-slate-600/75 dark:active:bg-slate-600/50",
-        "rounded-sm transition-all duration-200 dark:bg-slate-800 disabled:text-slate-100 disabled:opacity-50",
+        "rounded-md transition-all duration-200 dark:bg-slate-800 disabled:text-slate-100 disabled:opacity-50",
         className
       )}
       onClick={(e) => {

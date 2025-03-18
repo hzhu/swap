@@ -27,7 +27,7 @@ export default async function Home({ searchParams }: PageProps) {
           <ConnectButton />
         </div>
       </header>
-      <section className="px-4 mt-8 md:mt-0 md:flex-grow md:flex md:items-center md:justify-center">
+      <section className="px-4 mt-8 md:mt-0 md:grow md:flex md:items-center md:justify-center">
         <div className="w-full max-w-md">
           <h1 className="sr-only">Swap Tokens</h1>
           <SwapForm
