@@ -129,6 +129,13 @@ export function SwapForm({
     }
   }, [outputAmount]);
 
+  useEffect(() => {
+    if (hash) {
+      dispatch({ type: "reset swap" });
+      setShouldFetchQuote(false);
+    }
+  }, [hash]);
+
   const tokenMapsByChainId = TOKEN_MAPS_BY_CHAIN_ID[state.chainId];
 
   // Calculate USD values
@@ -146,7 +153,7 @@ export function SwapForm({
   const balance = "0.017789...";
 
   return (
-    <div className="w-full max-w-md mx-auto dark:dark bg-card text-card-foreground rounded-3xl overflow-hidden">
+    <div className="w-full max-w-md mx-auto dark:dark bg-card text-card-foreground rounded-3xl overflow-hidden  relative bottom-12">
       <div className="flex items-center justify-between p-4">
         <Select
           value={state.chainId.toString()}
@@ -452,10 +459,18 @@ export function SwapForm({
 
         {/* Submit Button */}
         <Button
-          disabled={!state.inputAmount || isFetching || quoteIsFetching}
+          disabled={
+            !state.inputAmount || isFetching || quoteIsFetching || !address
+          }
           type="button"
           onClick={() => {
-            setShouldFetchQuote(true);
+            const wantToSwap = window.confirm(
+              `Are you sure you want to swap? ${state.inputAmount} ${state.sellToken.symbol} for ${formattedOutput} ${state.buyToken.symbol}`
+            );
+
+            if (wantToSwap) {
+              setShouldFetchQuote(true);
+            }
 
             if (quote) {
               sendTransaction({
@@ -490,6 +505,8 @@ export function SwapForm({
               </svg>
               <span>Loading...</span>
             </div>
+          ) : !address ? (
+            "Connect"
           ) : quote ? (
             "Submit"
           ) : !state.inputAmount ? (
@@ -500,8 +517,8 @@ export function SwapForm({
         </Button>
 
         {hash && (
-          <div className="mt-4 p-4 bg-[#1a1a1a] rounded-xl border border-[#ff7846]/20 text-sm">
-            <div className="flex items-center gap-2 text-[#ff7846]">
+          <div className="mt-4 p-4 bg-[#1a1a1a] rounded-xl border border-[#FFF]/20 text-sm">
+            <div className="flex items-center gap-2 text-[#FFF]">
               <svg
                 width="16"
                 height="16"
@@ -530,7 +547,7 @@ export function SwapForm({
               href={`https://basescan.org/tx/${hash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#ff7846] hover:text-[#ff7846]/80 text-xs mt-2 block truncate"
+              className="text-[#FFF] hover:text-[#FFF]/80 text-xs mt-2 block truncate underline"
             >
               View on explorer: {hash.slice(0, 10)}...{hash.slice(-8)}
             </a>

@@ -32,7 +32,7 @@ export default async function Home({ searchParams }: PageProps) {
           </div>
         </div>
       </header>
-      <main className="flex-1 flex items-center justify-center relative bottom-12">
+      <main className="flex-1 flex items-center justify-center">
         <h1 className="sr-only">Swap Tokens</h1>
         <SwapForm
           chainId={chainId}

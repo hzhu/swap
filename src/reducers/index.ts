@@ -14,7 +14,8 @@ type Action =
   | { type: "toggle direction"; payload: string }
   | { type: "select sell token"; payload: Token }
   | { type: "select buy token"; payload: Token }
-  | { type: "select chain"; payload: number };
+  | { type: "select chain"; payload: number }
+  | { type: "reset swap" };
 
 export function swapReducer(state: State, action: Action): State {
   switch (action.type) {
@@ -57,6 +58,12 @@ export function swapReducer(state: State, action: Action): State {
         inputAmount: "",
         sellToken,
         buyToken,
+      };
+    case "reset swap":
+      return {
+        ...state,
+        inputAmount: "",
+        shouldDebounce: false,
       };
     default:
       return state;
