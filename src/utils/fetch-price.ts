@@ -1,4 +1,5 @@
-export async function fetchPrice({
+export async function fetchSwap({
+  endpoint,
   taker,
   chainId,
   buyToken,
@@ -6,6 +7,7 @@ export async function fetchPrice({
   sellAmount,
   slippageBps,
 }: {
+  endpoint: string;
   chainId: number;
   taker?: string;
   buyToken: string;
@@ -13,7 +15,7 @@ export async function fetchPrice({
   sellAmount: string;
   slippageBps?: number;
 }) {
-  const url = new URL("/api/price", window.location.origin);
+  const url = new URL(endpoint, window.location.origin);
 
   url.searchParams.set("chainId", chainId.toString());
   url.searchParams.set("sellToken", sellToken);

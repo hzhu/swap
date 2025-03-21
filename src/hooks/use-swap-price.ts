@@ -1,11 +1,11 @@
-import { parseUnits } from "viem";
+import { type Address, parseUnits } from "viem";
 import { useQuery } from "@tanstack/react-query";
-import { fetchPrice } from "@/utils/fetch-price";
+import { fetchSwap } from "@/utils/fetch-price";
 import type { Token } from "@/types/tokens";
 import type { ZeroExPriceResponse } from "@/types/zeroex-api";
 
-interface UseSwapPriceArgs {
-  taker?: string;
+export interface UseSwapParams {
+  taker?: Address;
   chainId: number;
   buyToken: Token;
   sellToken: Token;
@@ -20,7 +20,7 @@ export function useSwapPrice({
   sellToken,
   sellAmount,
   slippageBps,
-}: UseSwapPriceArgs) {
+}: UseSwapParams) {
   return useQuery<ZeroExPriceResponse>({
     enabled: Boolean(sellAmount),
     queryKey: [
@@ -32,7 +32,8 @@ export function useSwapPrice({
       sellToken.address,
     ],
     queryFn: async () => {
-      return await fetchPrice({
+      return await fetchSwap({
+        endpoint: "/api/price",
         taker,
         chainId,
         slippageBps,

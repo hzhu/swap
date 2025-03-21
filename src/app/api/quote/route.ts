@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     throw new Error("ZERO_EX_API_KEY is not set");
   }
 
-  if (!chainId || !sellToken || !buyToken || !sellAmount) {
+  if (!chainId || !sellToken || !buyToken || !sellAmount || !taker) {
     return NextResponse.json(
       { message: "Missing required query parameters" },
       { status: 400 }
@@ -24,18 +24,16 @@ export async function GET(request: Request) {
   }
 
   try {
-    const zeroExUrl = new URL("https://api.0x.org/swap/allowance-holder/price");
+    const zeroExUrl = new URL("https://api.0x.org/swap/allowance-holder/quote");
 
     zeroExUrl.searchParams.set("chainId", chainId);
     zeroExUrl.searchParams.set("sellToken", sellToken);
     zeroExUrl.searchParams.set("buyToken", buyToken);
     zeroExUrl.searchParams.set("sellAmount", sellAmount);
+    zeroExUrl.searchParams.set("taker", taker);
 
     if (slippageBps) {
       zeroExUrl.searchParams.set("slippageBps", slippageBps);
-    }
-    if (taker) {
-      zeroExUrl.searchParams.set("taker", taker);
     }
 
     const response = await fetch(zeroExUrl.toString(), {
