@@ -18,7 +18,7 @@ export const DirectionButton = forwardRef<
     <button
       ref={ref}
       className={clsx(
-        "py-1 px-2 text-lg rounded-xl flex items-center justify-center translate-y-1.5 select-none transition-all",
+        "py-1 px-2 text-lg rounded-xl flex items-center justify-center select-none transition-all",
         props.disabled
           ? ""
           : "dark:hover:bg-slate-600/75 dark:active:bg-slate-600/50",

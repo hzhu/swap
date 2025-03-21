@@ -1,12 +1,20 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+} from "@/components/ui/select";
 import Image from "next/image";
-import { useReducer, useState } from "react";
+import { useReducer, useState, useEffect, useRef } from "react";
 import { formatUnits, parseUnits } from "viem";
 import { base } from "viem/chains";
 import { swapReducer } from "@/reducers";
 import { useSearchParams } from "next/navigation";
-import { DirectionButton } from "./direction-button";
 import { isChainIdSupported } from "@/utils/validation";
 import { useDebounce, useSwapPrice, useSyncSwapParams } from "@/hooks";
 import {
@@ -22,6 +30,27 @@ import { useSendTransaction } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSwap } from "@/utils/fetch-price";
 import { useWallets } from "@privy-io/react-auth";
+import { DirectionButton } from "@/components/direction-button";
+
+// Helper function to format numbers with appropriate precision
+function formatCryptoAmount(amount: string): string {
+  if (!amount || amount === "0") return "0";
+
+  const num = Number.parseFloat(amount);
+
+  // For very small numbers (less than 0.001), use scientific notation
+  if (num < 0.001 && num > 0) {
+    return num.toExponential(4);
+  }
+
+  // For numbers with many decimal places, limit to 6 decimal places
+  const parts = amount.split(".");
+  if (parts.length === 2 && parts[1].length > 6) {
+    return `${parts[0]}.${parts[1].substring(0, 6)}`;
+  }
+
+  return amount;
+}
 
 export function SwapForm({
   chainId,
@@ -52,6 +81,7 @@ export function SwapForm({
   const [wallet] = wallets;
   const address = wallet?.address;
   const searchParams = useSearchParams();
+  const [formattedOutput, setFormattedOutput] = useState("0");
 
   useSyncSwapParams({ state, searchParams });
 
@@ -72,8 +102,6 @@ export function SwapForm({
 
   const { sendTransaction, data: hash } = useSendTransaction();
 
-  console.log(hash, "<--hash");
-
   const {
     data: quote,
     error: quoteError,
@@ -92,196 +120,429 @@ export function SwapForm({
     ? formatUnits(BigInt(data.buyAmount), state.buyToken.decimals)
     : "";
 
+  // Format the output amount for display
+  useEffect(() => {
+    if (outputAmount) {
+      setFormattedOutput(formatCryptoAmount(outputAmount));
+    } else {
+      setFormattedOutput("0");
+    }
+  }, [outputAmount]);
+
   const tokenMapsByChainId = TOKEN_MAPS_BY_CHAIN_ID[state.chainId];
 
-  return (
-    <form>
-      {quote ? (
-        <div>
-          <div>Sell Token {quote.sellToken}</div>
-          <div>Sell Amount {quote.sellAmount} </div>
+  // Calculate USD values
+  const sellUsdValue = state.inputAmount
+    ? `$${(Number(state.inputAmount) * 1950).toFixed(2)}`
+    : "$0.00";
+  const buyUsdValue = outputAmount
+    ? `$${(Number(outputAmount) * 0.003).toFixed(2)}`
+    : "$0.00";
 
-          <div>Buy Token {quote.buyToken}</div>
-          <div>Buy Amount {quote.buyAmount}</div>
-        </div>
-      ) : (
-        <>
-          <div className="flex mb-2 justify-end">
-            <div className="flex">
-              <Image
-                width={28}
-                height={28}
-                src={`${CHAIN_NAMES_BY_ID[state.chainId].toLowerCase()}.svg`}
-                alt={`${CHAIN_NAMES_BY_ID[state.chainId].toLowerCase()} logo`}
-              />
-              <label htmlFor="chain-selector" className="sr-only">
-                select a chain
-              </label>
-              <select
-                id="chain-selector"
-                value={state.chainId}
-                className="py-1 px-2 ml-2 rounded-md"
-                onChange={(e) => {
-                  dispatch({
-                    type: "select chain",
-                    payload: Number(e.target.value),
-                  });
-                }}
-              >
-                {SUPPORTED_CHAINS.map((chain) => (
-                  <option key={chain.id} value={chain.id}>
-                    {chain.name}
-                  </option>
-                ))}
-              </select>
+  // Tooltip ref for showing full amount on hover
+  const outputRef = useRef<HTMLDivElement>(null);
+
+  // Mock balance for demonstration
+  const balance = "0.017789...";
+
+  return (
+    <div className="w-full max-w-md mx-auto dark:dark bg-card text-card-foreground rounded-3xl overflow-hidden">
+      <div className="flex items-center justify-between p-4">
+        <Select
+          value={state.chainId.toString()}
+          onValueChange={(value) => {
+            dispatch({
+              type: "select chain",
+              payload: Number(value),
+            });
+          }}
+        >
+          <SelectTrigger className="h-12 bg-gray-100 dark:bg-[#1e1e1e] border-0 rounded-full min-w-[140px]">
+            <div className="flex items-center gap-2">
+              <div className="relative w-6 h-6">
+                <Image
+                  fill
+                  src={`${CHAIN_NAMES_BY_ID[state.chainId].toLowerCase()}.svg`}
+                  alt={`${CHAIN_NAMES_BY_ID[state.chainId].toLowerCase()} logo`}
+                  className="rounded-full object-contain"
+                />
+              </div>
+              <span className="font-medium">
+                {CHAIN_NAMES_BY_ID[state.chainId]}
+              </span>
             </div>
-          </div>
-          <div className="flex items-center mb-2">
-            <label
-              htmlFor="input-amount"
-              className="font-semibold flex items-center"
+          </SelectTrigger>
+          <SelectContent className="dark:bg-[#252525] dark:border-[#444]">
+            <SelectGroup>
+              <SelectLabel className="dark:text-[#888]">Networks</SelectLabel>
+              {SUPPORTED_CHAINS.map((chain) => (
+                <SelectItem
+                  key={chain.id}
+                  value={chain.id.toString()}
+                  className="dark:focus:bg-[#333] dark:focus:text-white"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-5 h-5">
+                      <Image
+                        fill
+                        src={`${CHAIN_NAMES_BY_ID[chain.id]}.svg`}
+                        alt={`${chain.name.toLowerCase()} logo`}
+                        className="rounded-full object-contain"
+                      />
+                    </div>
+                    {CHAIN_NAMES_BY_ID[chain.id]}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+
+        <div className="flex gap-3">
+          <button className="p-3 bg-gray-50 dark:bg-[#1e1e1e] rounded-full">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <span className="text-2xl mr-2">Sell</span>
-              <Image
-                priority
-                width={25}
-                height={25}
-                src={state.sellToken.logo}
-                className="inline-block mr-2"
-                alt={`${state.sellToken.symbol} logo`}
-              />
-            </label>
-            <div>
-              <label
-                htmlFor="sell-token"
-                className="block mb-2 text-sm font-medium text-gray-900 sr-only"
-              >
-                select a sell token
-              </label>
-              <select
-                id="sell-token"
-                value={state.sellToken.address}
-                className="py-1 px-2 rounded-md"
-                onChange={(e) => {
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"></path>
+            </svg>
+          </button>
+          <button className="p-3 bg-gray-50 dark:bg-[#1e1e1e] rounded-full">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-4 flex-grow">
+        <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-2xl p-5">
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-xl font-medium">Sell</div>
+            <div className="dark:text-[#888]">Balance: {balance}</div>
+          </div>
+
+          <div className="flex flex-wrap sm:flex-nowrap justify-between items-center mb-4 gap-2">
+            <Select
+              value={state.sellToken.address}
+              onValueChange={(value) => {
+                dispatch({
+                  type: "select sell token",
+                  payload: tokenMapsByChainId[value],
+                });
+              }}
+            >
+              <SelectTrigger className="h-12 min-w-[128px] bg-gray-200 dark:bg-[#252525] border-0 rounded-full -ml-1">
+                <div className="flex items-center gap-2">
+                  <div className="relative w-6 h-6">
+                    <Image
+                      fill
+                      src={state.sellToken.logo || "/placeholder.svg"}
+                      alt={`${state.sellToken.symbol} logo`}
+                      className="rounded-full object-contain"
+                    />
+                  </div>
+                  <span className="font-medium">{state.sellToken.symbol}</span>
+                </div>
+              </SelectTrigger>
+              <SelectContent className="dark:bg-[#252525] dark:border-[#444]">
+                <SelectGroup>
+                  <SelectLabel className="dark:text-[#888]">Tokens</SelectLabel>
+                  {TOKENS_BY_CHAIN_ID[state.chainId].map((option) => (
+                    <SelectItem
+                      key={option.address}
+                      value={option.address}
+                      className="dark:focus:bg-[#333] dark:focus:text-white"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="relative w-5 h-5">
+                          <Image
+                            fill
+                            src={option.logo || "/placeholder.svg"}
+                            alt={`${option.symbol} logo`}
+                            className="rounded-full object-contain"
+                          />
+                        </div>
+                        {option.symbol}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <div className="flex gap-2 flex-wrap sm:flex-nowrap justify-end">
+              <button
+                className="px-3 py-1 bg-gray-100 dark:bg-[#252525] rounded-full text-sm dark:text-[#888] hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
+                onClick={() => {
                   dispatch({
-                    type: "select sell token",
-                    payload: tokenMapsByChainId[e.target.value],
+                    type: "type sell amount",
+                    payload: "",
                   });
                 }}
               >
-                {TOKENS_BY_CHAIN_ID[state.chainId].map((option) => (
-                  <option key={option.address} value={option.address}>
-                    {option.symbol}
-                  </option>
-                ))}
-              </select>
+                Clear
+              </button>
+              <button
+                className="px-3 py-1 bg-gray-100 dark:bg-[#252525] rounded-full text-sm dark:text-[#888] hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
+                onClick={() => {
+                  dispatch({
+                    type: "type sell amount",
+                    payload: (Number(maxAmount) * 0.5).toString(),
+                  });
+                }}
+              >
+                50%
+              </button>
+              <button
+                className="px-3 py-1 bg-gray-100 dark:bg-[#252525] rounded-full text-sm dark:text-[#888] hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
+                onClick={() => {
+                  dispatch({
+                    type: "type sell amount",
+                    payload: maxAmount,
+                  });
+                }}
+              >
+                Max
+              </button>
             </div>
           </div>
-          <input
-            type="text"
-            id="input-amount"
-            autoCorrect="off"
-            autoComplete="off"
-            spellCheck="false"
-            inputMode="decimal"
-            value={state.inputAmount}
-            placeholder="Enter amount"
-            pattern="^[0-9]*[.,]?[0-9]*$"
-            className="text-lg w-full p-3 rounded-xl border border-gray-300 focus:outline-hidden focus:ring-2 focus:ring-blue-300"
-            onChange={(e) => {
-              if (e.target.validity.valid) {
-                dispatch({
-                  type: "type sell amount",
-                  payload: e.target.value,
-                });
-              }
+
+          <div className="flex justify-between items-center">
+            <input
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              autoCorrect="off"
+              pattern="^[0-9]*[.,]?[0-9]*$"
+              placeholder="0"
+              spellCheck="false"
+              value={state.inputAmount}
+              onChange={(e) => {
+                if (e.target.validity.valid) {
+                  dispatch({
+                    type: "type sell amount",
+                    payload: e.target.value,
+                  });
+                }
+              }}
+              className="text-4xl font-medium bg-transparent border-0 outline-none w-1/2 focus:outline-none"
+              style={{ caretColor: "white" }}
+            />
+            <div className="text-xl text-[#888]">{sellUsdValue}</div>
+          </div>
+        </div>
+
+        {/* Direction Button */}
+        <div className="flex justify-center">
+          <DirectionButton
+            type="button"
+            onClick={() => {
+              dispatch({ type: "toggle direction", payload: outputAmount });
             }}
           />
-          <div aria-live="polite" className="h-6 mt-2 text-sm text-gray-300">
-            {error ? (
-              <p className="text-red-500">{error.message}</p>
-            ) : isFetching ? (
-              "Finding best price…"
-            ) : null}
-          </div>
-          <div className="flex justify-center">
-            <DirectionButton
-              type="button"
-              className="mb-8"
-              onClick={() => {
-                dispatch({ type: "toggle direction", payload: outputAmount });
-              }}
-            />
-          </div>
-          <div className="flex items-center">
-            <label
-              htmlFor="sell-amount"
-              className="font-semibold flex items-center"
-            >
-              <span className="text-2xl mr-2">Buy</span>
-              <Image
-                priority
-                width={25}
-                height={25}
-                src={state.buyToken.logo}
-                className="inline-block mr-2"
-                alt={`${state.buyToken.symbol} logo`}
-              />
-            </label>
-            <div>
-              <label
-                htmlFor="buy-token"
-                className="block mb-2 text-sm font-medium text-gray-900 sr-only"
-              >
-                select a buy token
-              </label>
-              <select
-                id="buy-token"
-                value={state.buyToken.address}
-                className="py-1 px-2 rounded-md"
-                onChange={(e) => {
-                  dispatch({
-                    type: "select buy token",
-                    payload: tokenMapsByChainId[e.target.value],
-                  });
-                }}
-              >
-                {TOKENS_BY_CHAIN_ID[state.chainId].map((option) => (
-                  <option key={option.address} value={option.address}>
-                    {option.symbol}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <input
-            disabled
-            id="sell-amount"
-            value={outputAmount}
-            className="mt-2 mb-6 text-lg w-full p-3 rounded-xl cursor-not-allowed border-none disabled:bg-gray-700 disabled:cursor-not-allowed"
-          />
-        </>
-      )}
-      <button
-        disabled={false}
-        type="button"
-        onClick={() => {
-          setShouldFetchQuote(true);
+        </div>
 
-          if (quote) {
-            sendTransaction({
-              to: quote.transaction.to,
-              data: quote.transaction.data,
-            });
-          }
-        }}
-        className="px-3 p-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-300 disabled:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-300 w-full select-none"
-      >
-        {quoteIsFetching ? "Loading..." : quote ? "Submit" : "Review"}
-      </button>
-    </form>
+        {/* Buy Token Section */}
+        <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-2xl p-5">
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-xl font-medium">Buy</div>
+          </div>
+
+          <div className="flex items-center justify-between mb-4">
+            <Select
+              value={state.buyToken.address}
+              onValueChange={(value) => {
+                dispatch({
+                  type: "select buy token",
+                  payload: tokenMapsByChainId[value],
+                });
+              }}
+            >
+              <SelectTrigger className="h-12 min-w-[128px] bg-gray-200 dark:bg-[#252525] border-0 rounded-full -ml-1">
+                <div className="flex items-center gap-2">
+                  <div className="relative w-6 h-6">
+                    <Image
+                      fill
+                      src={state.buyToken.logo || "/placeholder.svg"}
+                      alt={`${state.buyToken.symbol} logo`}
+                      className="rounded-full object-contain"
+                    />
+                  </div>
+                  <span className="font-medium">{state.buyToken.symbol}</span>
+                </div>
+              </SelectTrigger>
+              <SelectContent className="dark:bg-[#252525] dark:border-[#444]">
+                <SelectGroup>
+                  <SelectLabel className="dark:text-[#888]">Tokens</SelectLabel>
+                  {TOKENS_BY_CHAIN_ID[state.chainId].map((option) => (
+                    <SelectItem
+                      key={option.address}
+                      value={option.address}
+                      className="dark:focus:bg-[#333] dark:focus:text-white"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="relative w-5 h-5">
+                          <Image
+                            fill
+                            src={option.logo || "/placeholder.svg"}
+                            alt={`${option.symbol} logo`}
+                            className="rounded-full object-contain"
+                          />
+                        </div>
+                        {option.symbol}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <div
+              ref={outputRef}
+              className="text-4xl font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]"
+              title={outputAmount || "0"}
+            >
+              {formattedOutput}
+            </div>
+            <div className="text-xl text-[#888]">{buyUsdValue}</div>
+          </div>
+        </div>
+
+        {/* Slippage Setting */}
+        <div className="flex items-center dark:text-[#888] mt-2">
+          <span>Slippage:</span>
+          <button className="ml-2 flex items-center gap-1 dark:bg-[#252525] rounded-lg px-2 py-1">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="black"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+            </svg>
+            <span>Auto</span>
+          </button>
+        </div>
+
+        {/* Submit Button */}
+        <Button
+          disabled={!state.inputAmount || isFetching || quoteIsFetching}
+          type="button"
+          onClick={() => {
+            setShouldFetchQuote(true);
+
+            if (quote) {
+              sendTransaction({
+                to: quote.transaction.to,
+                data: quote.transaction.data,
+              });
+            }
+          }}
+          className="w-full h-16 mt-4 text-xl font-medium rounded-2xl bg-[#2a3050] hover:bg-[#2d3459] text-white border-0"
+        >
+          {quoteIsFetching ? (
+            <div className="flex items-center justify-center gap-2">
+              <svg
+                className="animate-spin h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span>Loading...</span>
+            </div>
+          ) : quote ? (
+            "Submit"
+          ) : !state.inputAmount ? (
+            "Enter an amount"
+          ) : (
+            "Review"
+          )}
+        </Button>
+
+        {hash && (
+          <div className="mt-4 p-4 bg-[#1a1a1a] rounded-xl border border-[#ff7846]/20 text-sm">
+            <div className="flex items-center gap-2 text-[#ff7846]">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M7.75 12L10.58 14.83L16.25 9.17"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <p className="font-medium">Transaction submitted</p>
+            </div>
+            <a
+              href={`https://basescan.org/tx/${hash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#ff7846] hover:text-[#ff7846]/80 text-xs mt-2 block truncate"
+            >
+              View on explorer: {hash.slice(0, 10)}...{hash.slice(-8)}
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
+
+// Mock max amount for demonstration
+const maxAmount = "0.065";
 
 function useQuote({
   taker,

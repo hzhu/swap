@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useAccount, useDisconnect } from "wagmi";
 import { useConnectWallet, useWallets } from "@privy-io/react-auth";
+import { Button } from "./ui/button";
 
 export function ConnectButton() {
   const { wallets, ready } = useWallets();
@@ -24,11 +25,12 @@ export function ConnectButton() {
   // Special case for Phantom wallet: Wagmi cannot programmatically disconnect it.
   if (isPhantomConnected && wallet.meta.icon) {
     return (
-      <button
+      <Button
+        variant="outline"
         onClick={() => {
           alert("Disconnect from Phantom wallet in Phantom extension");
         }}
-        className="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-300 transition-all flex items-center"
+        className="px-4 py-2"
       >
         <Image
           width={20}
@@ -39,15 +41,12 @@ export function ConnectButton() {
           style={{ height: "20px", width: "20px" }}
         />
         Disconnect
-      </button>
+      </Button>
     );
   }
 
   return ready ? (
-    <button
-      onClick={handleConnect}
-      className="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-300 transition-all flex items-center"
-    >
+    <Button variant="outline" onClick={handleConnect} className="px-4 py-2">
       {isConnected && wallet && wallet.meta?.icon ? (
         <>
           <Image
@@ -63,6 +62,6 @@ export function ConnectButton() {
       ) : (
         "Connect"
       )}
-    </button>
+    </Button>
   ) : null;
 }
