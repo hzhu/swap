@@ -1,5 +1,16 @@
 "use client";
-
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { useReducer, useState } from "react";
 import { formatUnits, parseUnits } from "viem";
@@ -16,6 +27,7 @@ import {
   INITIAL_SELL_TOKEN,
   TOKENS_BY_CHAIN_ID,
   TOKEN_MAPS_BY_CHAIN_ID,
+  BASE_TOKENS_BY_ADDRESS,
 } from "@/constants";
 import type { SwapFormProps } from "@/types";
 import { useSendTransaction } from "wagmi";
@@ -94,17 +106,97 @@ export function SwapForm({
 
   const tokenMapsByChainId = TOKEN_MAPS_BY_CHAIN_ID[state.chainId];
 
+  const formattedSellAmount = quote
+    ? formatUnits(
+        BigInt(quote.sellAmount),
+        BASE_TOKENS_BY_ADDRESS[quote.sellToken].decimals
+      )
+    : "1";
+
+  const formattedBuyAmount = quote
+    ? formatUnits(
+        BigInt(quote.buyAmount),
+        BASE_TOKENS_BY_ADDRESS[quote.buyToken].decimals
+      )
+    : "2.234612389467324";
+
   return (
     <form>
-      {quote ? (
-        <div>
-          <div>Sell Token {quote.sellToken}</div>
-          <div>Sell Amount {quote.sellAmount} </div>
-
-          <div>Buy Token {quote.buyToken}</div>
-          <div>Buy Amount {quote.buyAmount}</div>
-        </div>
+      {false ? (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">Edit Profile</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit profile</DialogTitle>
+              <DialogDescription>
+                Make changes to your profile here. Click save when you're done.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
+                <Input
+                  id="name"
+                  defaultValue="Pedro Duarte"
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="username" className="text-right">
+                  Username
+                </Label>
+                <Input
+                  id="username"
+                  defaultValue="@peduarte"
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit">Save changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       ) : (
+        // <div
+        //   className="flex flex-col items-center justify-between mb-4"
+        //   style={{
+        //     border: "1px solid red",
+        //     padding: "10px",
+        //     borderRadius: "10px",
+        //   }}
+        // >
+        //   <div className="flex">
+        //     <div>Sell</div>
+        //     <div>{formattedSellAmount} </div>
+
+        //     <Image
+        //       priority
+        //       width={25}
+        //       height={25}
+        //       src={state.sellToken.logo}
+        //       alt={`${state.sellToken.symbol} logo`}
+        //     />
+
+        //     <div>{state.sellToken.symbol}</div>
+        //   </div>
+        //   ⬇️
+        //   <div className="flex justify-between">
+        //     <div>{formattedBuyAmount}</div>
+        //     <Image
+        //       width={18}
+        //       height={18}
+        //       src={state.buyToken.logo}
+        //       alt={state.buyToken.name}
+        //     />
+        //     <div>{state.buyToken.symbol}</div>
+        //   </div>
+
+        // </div>
         <>
           <div className="flex mb-2 justify-end">
             <div className="flex">
@@ -199,7 +291,7 @@ export function SwapForm({
           />
           <div aria-live="polite" className="h-6 mt-2 text-sm text-gray-300">
             {error ? (
-              <p className="text-red-500">{error.message}</p>
+              <p className="text-red-500">{error?.message}</p>
             ) : isFetching ? (
               "Finding best price…"
             ) : null}
