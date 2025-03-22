@@ -51,6 +51,127 @@ export type LoadOptionsWithClientInstance = LoadOptionsBase & { client: { instan
 
 export type LoadOptions = LoadOptionsWithEnvironment | LoadOptionsWithApiKey | LoadOptionsWithClientInstance;
 
+export interface BuyTokenSelectedProperties {
+  Address: string;
+  Name: string;
+  Symbol: string;
+}
+
+export interface SellTokenSelectedProperties {
+  Address: string;
+  Name: string;
+  Symbol: string;
+}
+
+export interface TradeCompletedProperties {
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | number |
+   */
+  "Buy Amount": number;
+  "Buy Token": string;
+  "Chain ID": string;
+  Reverted: boolean;
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | number |
+   */
+  "Sell Amount": number;
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | number |
+   */
+  "Sell Amount USD": number;
+  "Sell Token": string;
+  "Slippage Bps": string;
+  "Transaction Hash": string;
+  ZID: string;
+}
+
+export interface TradeSubmittedProperties {
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | number |
+   */
+  "Buy Amount": number;
+  "Buy Token": string;
+  "Chain ID": string;
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | number |
+   */
+  "Sell Amount": number;
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | number |
+   */
+  "Sell Amount USD": number;
+  "Sell Token": string;
+  "Slippage Bps": string;
+  "Transaction Hash": string;
+  ZID: string;
+}
+
+export interface WalletConnectedProperties {
+  Name: string;
+}
+
+export class BuyTokenSelected implements BaseEvent {
+  event_type = 'Buy Token Selected';
+
+  constructor(
+    public event_properties: BuyTokenSelectedProperties,
+  ) {
+    this.event_properties = event_properties;
+  }
+}
+
+export class SellTokenSelected implements BaseEvent {
+  event_type = 'Sell Token Selected';
+
+  constructor(
+    public event_properties: SellTokenSelectedProperties,
+  ) {
+    this.event_properties = event_properties;
+  }
+}
+
+export class TradeCompleted implements BaseEvent {
+  event_type = 'Trade Completed';
+
+  constructor(
+    public event_properties: TradeCompletedProperties,
+  ) {
+    this.event_properties = event_properties;
+  }
+}
+
+export class TradeSubmitted implements BaseEvent {
+  event_type = 'Trade Submitted';
+
+  constructor(
+    public event_properties: TradeSubmittedProperties,
+  ) {
+    this.event_properties = event_properties;
+  }
+}
+
+export class WalletConnected implements BaseEvent {
+  event_type = 'Wallet Connected';
+
+  constructor(
+    public event_properties: WalletConnectedProperties,
+  ) {
+    this.event_properties = event_properties;
+  }
+}
+
 export type PromiseResult<T> = { promise: Promise<T | void> };
 
 const getVoidPromiseResult = () => ({ promise: Promise.resolve() });
@@ -160,6 +281,90 @@ export class Ampli {
     return this.amplitude!.track(event, undefined, options);
   }
 
+  /**
+   * Buy Token Selected
+   *
+   * [View in Tracking Plan](https://data.amplitude.com/henry/Swap%20Development/events/main/latest/Buy%20Token%20Selected)
+   *
+   * Event has no description in tracking plan.
+   *
+   * @param properties The event's properties (e.g. Address)
+   * @param options Amplitude event options.
+   */
+  buyTokenSelected(
+    properties: BuyTokenSelectedProperties,
+    options?: EventOptions,
+  ) {
+    return this.track(new BuyTokenSelected(properties), options);
+  }
+
+  /**
+   * Sell Token Selected
+   *
+   * [View in Tracking Plan](https://data.amplitude.com/henry/Swap%20Development/events/main/latest/Sell%20Token%20Selected)
+   *
+   * Event has no description in tracking plan.
+   *
+   * @param properties The event's properties (e.g. Address)
+   * @param options Amplitude event options.
+   */
+  sellTokenSelected(
+    properties: SellTokenSelectedProperties,
+    options?: EventOptions,
+  ) {
+    return this.track(new SellTokenSelected(properties), options);
+  }
+
+  /**
+   * Trade Completed
+   *
+   * [View in Tracking Plan](https://data.amplitude.com/henry/Swap%20Development/events/main/latest/Trade%20Completed)
+   *
+   * This event is fired when a user submits a transaction (trade) to the blockchain and the transaction is settled on chain.
+   *
+   * @param properties The event's properties (e.g. Buy Amount)
+   * @param options Amplitude event options.
+   */
+  tradeCompleted(
+    properties: TradeCompletedProperties,
+    options?: EventOptions,
+  ) {
+    return this.track(new TradeCompleted(properties), options);
+  }
+
+  /**
+   * Trade Submitted
+   *
+   * [View in Tracking Plan](https://data.amplitude.com/henry/Swap%20Development/events/main/latest/Trade%20Submitted)
+   *
+   * Event has no description in tracking plan.
+   *
+   * @param properties The event's properties (e.g. Buy Amount)
+   * @param options Amplitude event options.
+   */
+  tradeSubmitted(
+    properties: TradeSubmittedProperties,
+    options?: EventOptions,
+  ) {
+    return this.track(new TradeSubmitted(properties), options);
+  }
+
+  /**
+   * Wallet Connected
+   *
+   * [View in Tracking Plan](https://data.amplitude.com/henry/Swap%20Development/events/main/latest/Wallet%20Connected)
+   *
+   * Event has no description in tracking plan.
+   *
+   * @param properties The event's properties (e.g. Name)
+   * @param options Amplitude event options.
+   */
+  walletConnected(
+    properties: WalletConnectedProperties,
+    options?: EventOptions,
+  ) {
+    return this.track(new WalletConnected(properties), options);
+  }
 }
 
 export const ampli = new Ampli();
