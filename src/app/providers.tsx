@@ -1,6 +1,6 @@
 "use client";
 
-import { base, mainnet } from "wagmi/chains";
+import { base, arbitrum } from "wagmi/chains";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { http, createConfig, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,13 +10,15 @@ import {
   walletConnect,
   coinbaseWallet,
 } from "wagmi/connectors";
+import { useEffect } from "react";
+import { initAnalytics } from "@/lib/amplitude";
 
 const queryClient = new QueryClient();
 
 const projectId = "ecf05e6e910a7006159c69f03dafbaeb"; // free project id
 
 export const config = createConfig({
-  chains: [mainnet, base],
+  chains: [arbitrum, base],
   connectors: [
     injected(),
     metaMask(),
@@ -24,16 +26,20 @@ export const config = createConfig({
     walletConnect({ projectId }),
   ],
   transports: {
-    [mainnet.id]: http(
-      "https://eth-mainnet.g.alchemy.com/v2/YViRFlzFSftOMSgTV6oTNTOcDH3EnD2a" // demo key
-    ),
     [base.id]: http(
-      "https://base-mainnet.g.alchemy.com/v2/YViRFlzFSftOMSgTV6oTNTOcDH3EnD2a" // demo key
+      "https://ethereum-rpc.vercel.app/api/base" // demo key
+    ),
+    [arbitrum.id]: http(
+      "https://ethereum-rpc.vercel.app/api/arbitrum" // demo key
     ),
   },
 });
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>

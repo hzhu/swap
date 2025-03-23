@@ -51,10 +51,29 @@ export type LoadOptionsWithClientInstance = LoadOptionsBase & { client: { instan
 
 export type LoadOptions = LoadOptionsWithEnvironment | LoadOptionsWithApiKey | LoadOptionsWithClientInstance;
 
+export interface IdentifyProperties {
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | number |
+   */
+  "Chain ID"?: number;
+  "Wallet Name"?: string;
+}
+
 export interface BuyTokenSelectedProperties {
   Address: string;
   Name: string;
   Symbol: string;
+}
+
+export interface ChainSelectedProperties {
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | number |
+   */
+  "Chain ID": number;
 }
 
 export interface SellTokenSelectedProperties {
@@ -71,7 +90,12 @@ export interface TradeCompletedProperties {
    */
   "Buy Amount": number;
   "Buy Token": string;
-  "Chain ID": string;
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | number |
+   */
+  "Chain ID": number;
   Reverted: boolean;
   /**
    * | Rule | Value |
@@ -86,9 +110,14 @@ export interface TradeCompletedProperties {
    */
   "Sell Amount USD": number;
   "Sell Token": string;
-  "Slippage Bps": string;
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | integer |
+   */
+  "Slippage Bps": number;
   "Transaction Hash": string;
-  ZID: string;
+  ZID?: string;
 }
 
 export interface TradeSubmittedProperties {
@@ -99,7 +128,12 @@ export interface TradeSubmittedProperties {
    */
   "Buy Amount": number;
   "Buy Token": string;
-  "Chain ID": string;
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | number |
+   */
+  "Chain ID": number;
   /**
    * | Rule | Value |
    * |---|---|
@@ -113,13 +147,34 @@ export interface TradeSubmittedProperties {
    */
   "Sell Amount USD": number;
   "Sell Token": string;
-  "Slippage Bps": string;
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | integer |
+   */
+  "Slippage Bps": number;
   "Transaction Hash": string;
-  ZID: string;
+  ZID?: string;
 }
 
 export interface WalletConnectedProperties {
-  Name: string;
+  /**
+   * | Rule | Value |
+   * |---|---|
+   * | Type | number |
+   */
+  "Chain ID": number;
+  "Wallet Name": string;
+}
+
+export class Identify implements BaseEvent {
+  event_type = amplitude.Types.SpecialEventType.IDENTIFY;
+
+  constructor(
+    public event_properties?: IdentifyProperties,
+  ) {
+    this.event_properties = event_properties;
+  }
 }
 
 export class BuyTokenSelected implements BaseEvent {
@@ -127,6 +182,16 @@ export class BuyTokenSelected implements BaseEvent {
 
   constructor(
     public event_properties: BuyTokenSelectedProperties,
+  ) {
+    this.event_properties = event_properties;
+  }
+}
+
+export class ChainSelected implements BaseEvent {
+  event_type = 'Chain Selected';
+
+  constructor(
+    public event_properties: ChainSelectedProperties,
   ) {
     this.event_properties = event_properties;
   }
@@ -235,10 +300,12 @@ export class Ampli {
    * Identify a user and set user properties.
    *
    * @param userId The user's id.
+   * @param properties The user properties.
    * @param options Optional event options.
    */
   identify(
     userId: string | undefined,
+    properties?: IdentifyProperties,
     options?: EventOptions,
   ): PromiseResult<Result> {
     if (!this.isInitializedAndEnabled()) {
@@ -250,6 +317,12 @@ export class Ampli {
     }
 
     const amplitudeIdentify = new amplitude.Identify();
+    const eventProperties = properties;
+    if (eventProperties != null) {
+      for (const [key, value] of Object.entries(eventProperties)) {
+        amplitudeIdentify.set(key, value);
+      }
+    }
     return this.amplitude!.identify(
       amplitudeIdentify,
       options,
@@ -296,6 +369,23 @@ export class Ampli {
     options?: EventOptions,
   ) {
     return this.track(new BuyTokenSelected(properties), options);
+  }
+
+  /**
+   * Chain Selected
+   *
+   * [View in Tracking Plan](https://data.amplitude.com/henry/Swap%20Development/events/main/latest/Chain%20Selected)
+   *
+   * Event has no description in tracking plan.
+   *
+   * @param properties The event's properties (e.g. Chain ID)
+   * @param options Amplitude event options.
+   */
+  chainSelected(
+    properties: ChainSelectedProperties,
+    options?: EventOptions,
+  ) {
+    return this.track(new ChainSelected(properties), options);
   }
 
   /**
@@ -356,7 +446,7 @@ export class Ampli {
    *
    * Event has no description in tracking plan.
    *
-   * @param properties The event's properties (e.g. Name)
+   * @param properties The event's properties (e.g. Chain ID)
    * @param options Amplitude event options.
    */
   walletConnected(

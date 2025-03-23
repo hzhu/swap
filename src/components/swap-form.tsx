@@ -1,20 +1,29 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { base } from "viem/chains";
+import { parseSwap } from "@0x/0x-parser";
+import { formatUnits, parseUnits } from "viem";
+import { useQuery } from "@tanstack/react-query";
+import { useWallets } from "@privy-io/react-auth";
+import { useSearchParams } from "next/navigation";
+import { useReducer, useState, useEffect, useRef } from "react";
+import { Loader2, BadgeCheck, OctagonXIcon } from "lucide-react";
+import {
+  usePublicClient,
+  useSendTransaction,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import {
   Select,
-  SelectContent,
-  SelectGroup,
   SelectItem,
   SelectLabel,
+  SelectGroup,
   SelectTrigger,
+  SelectContent,
 } from "@/components/ui/select";
-import Image from "next/image";
-import { useReducer, useState, useEffect, useRef } from "react";
-import { formatUnits, parseUnits } from "viem";
-import { base } from "viem/chains";
 import { swapReducer } from "@/reducers";
-import { useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { isChainIdSupported } from "@/utils/validation";
 import { useDebounce, useSwapPrice, useSyncSwapParams } from "@/hooks";
 import {
@@ -26,11 +35,9 @@ import {
   TOKEN_MAPS_BY_CHAIN_ID,
 } from "@/constants";
 import type { SwapFormProps } from "@/types";
-import { useSendTransaction } from "wagmi";
-import { useQuery } from "@tanstack/react-query";
 import { fetchSwap } from "@/utils/fetch-price";
-import { useWallets } from "@privy-io/react-auth";
 import { DirectionButton } from "@/components/direction-button";
+import { ampli } from "@/ampli";
 
 // Helper function to format numbers with appropriate precision
 function formatCryptoAmount(amount: string): string {
@@ -100,8 +107,6 @@ export function SwapForm({
 
   const [shouldFetchQuote, setShouldFetchQuote] = useState(false);
 
-  const { sendTransaction, data: hash } = useSendTransaction();
-
   const {
     data: quote,
     error: quoteError,
@@ -116,6 +121,79 @@ export function SwapForm({
     enabled: shouldFetchQuote,
   });
 
+  const publicClient = usePublicClient({
+    chainId: state.chainId,
+  });
+
+  const { data: hash, sendTransaction } = useSendTransaction();
+
+  const {
+    data: receipt,
+    error: receiptError,
+    isLoading: isLoadingTxReceipt,
+  } = useWaitForTransactionReceipt({ hash });
+
+  const trackedHashRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    async function parseAndTrackSwap() {
+      if (hash && hash === trackedHashRef.current) {
+        console.log("Already tracked:", hash);
+        return;
+      }
+
+      if (receiptError && hash) {
+        ampli.tradeCompleted({
+          "Slippage Bps": 50,
+          "Chain ID": state.chainId,
+          "Transaction Hash": hash.toString(),
+          "Sell Token": state.sellToken.symbol,
+          "Buy Token": state.buyToken.symbol,
+          "Sell Amount": Number(state.inputAmount),
+          "Buy Amount": Number(state.inputAmount),
+          "Sell Amount USD": Number(state.inputAmount) * 12,
+          Reverted: true,
+        });
+        trackedHashRef.current = hash;
+        return;
+      }
+
+      if (!receipt || !publicClient) {
+        console.log("No receipt or publicClient available, aborting.");
+        return;
+      }
+
+      try {
+        const swapDetails = await parseSwap({
+          publicClient,
+          transactionHash: receipt.transactionHash,
+        });
+
+        if (swapDetails && receipt.status === "success") {
+          ampli.tradeCompleted({
+            "Slippage Bps": 50,
+            "Chain ID": receipt.chainId,
+            "Transaction Hash": receipt.transactionHash,
+            "Sell Token": swapDetails.tokenIn.symbol,
+            "Buy Token": swapDetails.tokenOut.symbol,
+            "Sell Amount": Number(swapDetails.tokenIn.amount),
+            "Buy Amount": Number(swapDetails.tokenOut.amount),
+            "Sell Amount USD": Number(swapDetails.tokenIn.amount) * 12,
+            Reverted: false,
+          });
+          trackedHashRef.current = receipt.transactionHash;
+
+          setShouldFetchQuote(false);
+          dispatch({ type: "reset swap" });
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    parseAndTrackSwap();
+  }, [hash, receipt, receiptError, publicClient]);
+
   const outputAmount = data?.buyAmount
     ? formatUnits(BigInt(data.buyAmount), state.buyToken.decimals)
     : "";
@@ -128,13 +206,6 @@ export function SwapForm({
       setFormattedOutput("0");
     }
   }, [outputAmount]);
-
-  useEffect(() => {
-    if (hash) {
-      dispatch({ type: "reset swap" });
-      setShouldFetchQuote(false);
-    }
-  }, [hash]);
 
   const tokenMapsByChainId = TOKEN_MAPS_BY_CHAIN_ID[state.chainId];
 
@@ -152,6 +223,12 @@ export function SwapForm({
   // Mock balance for demonstration
   const balance = "0.017789...";
 
+  const txStatusBorder = isLoadingTxReceipt
+    ? "border-gray-500"
+    : receipt?.status === "success"
+    ? "border-green-500"
+    : "border-red-500";
+
   return (
     <div className="w-full max-w-md mx-auto dark:dark bg-card text-card-foreground rounded-3xl overflow-hidden  relative bottom-12">
       <div className="flex items-center justify-between p-4">
@@ -162,6 +239,7 @@ export function SwapForm({
               type: "select chain",
               payload: Number(value),
             });
+            ampli.chainSelected({ "Chain ID": Number(value) });
           }}
         >
           <SelectTrigger className="h-12 bg-gray-100 dark:bg-[#1e1e1e] border-0 rounded-full min-w-[140px]">
@@ -192,7 +270,7 @@ export function SwapForm({
                     <div className="relative w-5 h-5">
                       <Image
                         fill
-                        src={`${CHAIN_NAMES_BY_ID[chain.id]}.svg`}
+                        src={`${CHAIN_NAMES_BY_ID[chain.id].toLowerCase()}.svg`}
                         alt={`${chain.name.toLowerCase()} logo`}
                         className="rounded-full object-contain"
                       />
@@ -251,9 +329,17 @@ export function SwapForm({
             <Select
               value={state.sellToken.address}
               onValueChange={(value) => {
+                const sellToken = tokenMapsByChainId[value];
+
                 dispatch({
                   type: "select sell token",
-                  payload: tokenMapsByChainId[value],
+                  payload: sellToken,
+                });
+
+                ampli.sellTokenSelected({
+                  Name: sellToken.name,
+                  Symbol: sellToken.symbol,
+                  Address: sellToken.address,
                 });
               }}
             >
@@ -357,7 +443,6 @@ export function SwapForm({
             <div className="text-xl text-[#888]">{sellUsdValue}</div>
           </div>
         </div>
-
         {/* Direction Button */}
         <div className="flex justify-center">
           <DirectionButton
@@ -367,7 +452,6 @@ export function SwapForm({
             }}
           />
         </div>
-
         {/* Buy Token Section */}
         <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-2xl p-5">
           <div className="flex justify-between items-center mb-4">
@@ -378,9 +462,17 @@ export function SwapForm({
             <Select
               value={state.buyToken.address}
               onValueChange={(value) => {
+                const buyToken = tokenMapsByChainId[value];
+
                 dispatch({
                   type: "select buy token",
-                  payload: tokenMapsByChainId[value],
+                  payload: buyToken,
+                });
+
+                ampli.buyTokenSelected({
+                  Name: buyToken.name,
+                  Symbol: buyToken.symbol,
+                  Address: buyToken.address,
                 });
               }}
             >
@@ -435,7 +527,6 @@ export function SwapForm({
             <div className="text-xl text-[#888]">{buyUsdValue}</div>
           </div>
         </div>
-
         {/* Slippage Setting */}
         <div className="flex items-center dark:text-[#888] mt-2">
           <span>Slippage:</span>
@@ -456,7 +547,6 @@ export function SwapForm({
             <span>Auto</span>
           </button>
         </div>
-
         {/* Submit Button */}
         <Button
           disabled={
@@ -464,6 +554,7 @@ export function SwapForm({
           }
           type="button"
           onClick={() => {
+            console.log(quote);
             const wantToSwap = window.confirm(
               `Are you sure you want to swap? ${state.inputAmount} ${state.sellToken.symbol} for ${formattedOutput} ${state.buyToken.symbol}`
             );
@@ -476,6 +567,8 @@ export function SwapForm({
               sendTransaction({
                 to: quote.transaction.to,
                 data: quote.transaction.data,
+                value: quote.transaction.value,
+                gas: BigInt(quote.transaction.gas),
               });
             }
           }}
@@ -517,39 +610,37 @@ export function SwapForm({
         </Button>
 
         {hash && (
-          <div className="mt-4 p-4 bg-[#1a1a1a] rounded-xl border border-[#FFF]/20 text-sm">
+          <div
+            className={`mt-4 p-4 bg-[#1a1a1a] rounded-xl border ${txStatusBorder} text-sm`}
+          >
             <div className="flex items-center gap-2 text-[#FFF]">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M7.75 12L10.58 14.83L16.25 9.17"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <p className="font-medium">Transaction submitted</p>
+              {isLoadingTxReceipt ? (
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              ) : receipt?.status === "success" ? (
+                <BadgeCheck className="h-5 w-5 text-green-500" />
+              ) : (
+                <OctagonXIcon className="h-5 w-5 text-red-500" />
+              )}
+              <p className="font-medium">
+                Transaction{" "}
+                {isLoadingTxReceipt
+                  ? "Submitting…"
+                  : receipt?.status === "success"
+                  ? "Completed"
+                  : "Reverted"}
+              </p>
             </div>
+
             <a
               href={`https://basescan.org/tx/${hash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#FFF] hover:text-[#FFF]/80 text-xs mt-2 block truncate underline"
+              className="text-[#FFF] hover:text-[#FFF]/80 text-xs mt-2 block truncate"
             >
-              View on explorer: {hash.slice(0, 10)}...{hash.slice(-8)}
+              View on block explorer:{" "}
+              <span className="underline">
+                {hash.slice(0, 10)}...{hash.slice(-8)}
+              </span>
             </a>
           </div>
         )}

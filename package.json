@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@0x/0x-parser": "^2.10.1",
     "@amplitude/analytics-browser": "^2.12.1",
     "@privy-io/react-auth": "^2.2.1",
     "@radix-ui/react-dialog": "^1.1.6",
@@ -26,8 +27,8 @@
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.0.2",
     "tw-animate-css": "^1.2.4",
-    "viem": "^2.22.10",
-    "wagmi": "^2.14.9"
+    "viem": "^2.23.1",
+    "wagmi": "^2.14.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.14",

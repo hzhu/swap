@@ -1,34 +1,54 @@
 "use client";
 
 import Image from "next/image";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount, useChainId, useDisconnect } from "wagmi";
 import { useConnectWallet, useWallets } from "@privy-io/react-auth";
 import { Button } from "./ui/button";
+import { ampli } from "@/ampli";
 
 export function ConnectButton() {
-  const { wallets, ready } = useWallets();
+  const chainId = useChainId();
   const { isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
-  const { connectWallet } = useConnectWallet();
+  const { wallets, ready } = useWallets();
   const wallet = wallets[0];
+  const connected = isConnected || Boolean(wallet);
+
+  const { connectWallet } = useConnectWallet({
+    onSuccess: ({ wallet }) => {
+      const props = {
+        "Chain ID": chainId,
+        "Wallet Name": wallet.meta.name,
+      };
+      ampli.identify(wallet.address, props);
+      ampli.walletConnected(props);
+    },
+  });
+
+  const { disconnect } = useDisconnect({
+    mutation: {
+      onSuccess: () => {
+        ampli.client.reset();
+      },
+    },
+  });
 
   const handleConnect = () => {
-    if (isConnected) {
+    if (connected) {
       disconnect();
     } else {
       connectWallet();
     }
   };
 
-  const isPhantomConnected = wallet && wallet.meta.name === "Phantom";
-
   // Special case for Phantom wallet: Wagmi cannot programmatically disconnect it.
+  // Use shim to handle
+  const isPhantomConnected = wallet && wallet.meta.name === "Phantom";
   if (isPhantomConnected && wallet.meta.icon) {
     return (
       <Button
         variant="outline"
         onClick={() => {
-          alert("Disconnect from Phantom wallet in Phantom extension");
+          alert("Disconnect from Phantom wallet in Phantom extension.");
         }}
         className="px-4 py-2"
       >
@@ -47,7 +67,7 @@ export function ConnectButton() {
 
   return ready ? (
     <Button variant="outline" onClick={handleConnect} className="px-4 py-2">
-      {isConnected && wallet && wallet.meta?.icon ? (
+      {connected && wallet.meta?.icon ? (
         <>
           <Image
             width={20}
